@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "serverluckyblock",
+  "version": "${version}",
+  "name": "serverluckyblock",
+  "description": "Create server-side lucky blocks",
+  "authors": [
+    "Eufranio"
+  ],
+  "contact": {
+    "repo": "https://github.com/frani/serverluckyblock"
+  },
+  "license": "All-Rights-Reserved",
+  "icon": "assets/serverluckyblock/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "io.github.eufranio.serverluckyblock.ServerLuckyBlock"
+    ]
+  },
+  "mixins": [
+    "serverluckyblock.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
