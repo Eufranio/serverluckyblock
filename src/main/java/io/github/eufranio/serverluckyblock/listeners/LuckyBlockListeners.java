@@ -4,12 +4,12 @@ import io.github.eufranio.serverluckyblock.ServerLuckyBlock;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.decoration.ItemFrameEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.TypeFilter;
-import net.minecraft.util.math.Box;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.decoration.ItemFrame;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.entity.EntityTypeTest;
+import net.minecraft.world.phys.AABB;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,29 +19,29 @@ public class LuckyBlockListeners {
 
     public static void register() {
         ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
-             if (entity instanceof ItemFrameEntity && entity.getCommandTags().contains("luckyblock")) {
-                 boolean placed = entity.getCommandTags().contains("placed");
+             if (entity instanceof ItemFrame && entity.getTags().contains("luckyblock")) {
+                 boolean placed = entity.getTags().contains("placed");
                  if (!placed) {
-                     entity.getCommandTags().add("placed");
-                     world.setBlockState(entity.getBlockPos(), Blocks.BARRIER.getDefaultState());
+                     entity.addTag("placed");
+                     world.setBlock(entity.blockPosition(), Blocks.BARRIER.defaultBlockState(), 3);
                  }
              }
         });
 
         AttackBlockCallback.EVENT.register((player, world, hand, pos, direction) -> {
-            var entity = world.getEntitiesByType(
-                    TypeFilter.instanceOf(ItemFrameEntity.class),
-                    new Box(pos),
-                    e -> e.getCommandTags().contains("luckyblock")
+            var entity = world.getEntities(
+                    EntityTypeTest.forClass(ItemFrame.class),
+                    new AABB(pos),
+                    e -> e.getTags().contains("luckyblock")
             ).stream().findFirst().orElse(null);
-            if (entity == null) return ActionResult.PASS;
+            if (entity == null) return InteractionResult.PASS;
 
-            String id = entity.getCommandTags()
+            String id = entity.getTags()
                     .stream()
                     .filter(cmd -> cmd.startsWith("luckyblock_"))
                     .map(cmd -> cmd.replace("luckyblock_", ""))
                     .findFirst().orElse(null);
-            if (id == null) return ActionResult.PASS;
+            if (id == null) return InteractionResult.PASS;
 
             var configuration = ServerLuckyBlock.getConfig().get()
                     .availableLuckyBlocks
@@ -49,10 +49,10 @@ public class LuckyBlockListeners {
                     .filter(cfg -> cfg.id.equalsIgnoreCase(id))
                     .findFirst()
                     .orElse(null);
-            if (configuration == null) return ActionResult.PASS;
+            if (configuration == null) return InteractionResult.PASS;
 
-            world.setBlockState(pos, Blocks.AIR.getDefaultState());
-            entity.setHeldItemStack(ItemStack.EMPTY, false);
+            world.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+            entity.setItem(ItemStack.EMPTY);
             entity.kill();
 
             final List<String> commandsToExecute = new ArrayList<>();
@@ -70,14 +70,12 @@ public class LuckyBlockListeners {
             }
 
             commandsToExecute.forEach(cmd -> {
-                var string = cmd.replace("%player%", player.getEntityName());
-                player.getServer().getCommandManager().executeWithPrefix(
-                        player.getServer().getCommandSource(),
-                        string
-                );
+                var string = cmd.replace("%player%", player.getName().getString());
+                var stack = player.getServer().createCommandSourceStack();
+                player.getServer().getCommands().performPrefixedCommand(stack, string);
             });
 
-            return ActionResult.SUCCESS;
+            return InteractionResult.SUCCESS;
         });
     }
 

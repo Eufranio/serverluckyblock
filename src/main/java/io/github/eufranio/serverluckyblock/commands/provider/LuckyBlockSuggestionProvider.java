@@ -6,16 +6,16 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import io.github.eufranio.serverluckyblock.ServerLuckyBlock;
-import net.minecraft.command.CommandSource;
-import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.SharedSuggestionProvider;
 
 import java.util.concurrent.CompletableFuture;
 
-public class LuckyBlockSuggestionProvider implements SuggestionProvider<ServerCommandSource> {
+public class LuckyBlockSuggestionProvider implements SuggestionProvider<CommandSourceStack> {
 
     @Override
-    public CompletableFuture<Suggestions> getSuggestions(CommandContext<ServerCommandSource> context, SuggestionsBuilder builder) throws CommandSyntaxException {
-        return CommandSource.suggestMatching(ServerLuckyBlock.getConfig().get()
+    public CompletableFuture<Suggestions> getSuggestions(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) throws CommandSyntaxException {
+        return SharedSuggestionProvider.suggest(ServerLuckyBlock.getConfig().get()
                 .availableLuckyBlocks
                 .stream()
                 .map(config -> config.id),
