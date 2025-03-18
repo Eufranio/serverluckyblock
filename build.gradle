@@ -40,6 +40,7 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
     implementation(include('com.github.Eufranio:StorageUtils:2.5.2'))
+    shadow 'com.github.Eufranio:StorageUtils:2.5.2'
 }
 
 processResources {
